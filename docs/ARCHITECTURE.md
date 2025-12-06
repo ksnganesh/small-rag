@@ -1,0 +1,11 @@
+- SmallRAG (API) composes:
+  - SmallStore (SQLite persistence)
+  - SmallChunker (chunking)
+  - SmallPreprocessor (cleaning)
+  - SmallEmbedder (abstraction)
+- Data model:
+  - documents(id, text, embedding JSON, metadata JSON)
+- Design goals:
+  - zero runtime dependencies
+  - small API surface
+
