@@ -96,7 +96,23 @@ rag.add_document("The Eiffel Tower is in Paris.", metadata={"topic": "landmark"}
 
 print(rag.query("Where is the Eiffel Tower?"))
 ```
+### OR 
+```python
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
+def st_embed(text: str):
+    return model.encode(text).tolist()
+
+rag = SmallRAG('data/rag.db')
+rag.set_embedder(st_embed)
+rag.add_document('Example doc about kafka and streaming')
+print(rag.query('kafka streaming'))
+
+# Export/Import
+rag.export_db('backup.json')
+rag.import_db('backup.json')
+```
 ---
 
 ## CLI Usage
@@ -176,15 +192,6 @@ rag.add_document("The Amazon rainforest is the largest rainforest on Earth.")
 
 print(rag.query("What is the largest rainforest?"))
 ```
-
----
-
-## Limitations (Intentional)
-
-- Linear search (no ANN index)
-- Not optimized for millions of vectors
-- Retrieval only — no built-in LLM generation
-- Minimalistic by design
 
 ---
 

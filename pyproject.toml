@@ -7,7 +7,7 @@ Homepage = "https://github.com/ksnganesh/smallrag"
 
 [project]
 name = "small-rag"
-version = "0.1.1"
+version = "0.1.2"
 description = "A minimal, dependency-free Retrieval-Augmented Generation (RAG) engine using SQLite as a local vector store."
 readme = "README.md"
 authors = [
