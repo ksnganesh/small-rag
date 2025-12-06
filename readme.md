@@ -1,35 +1,200 @@
-# smallrag
+# small-rag  
+A lightweight, dependency-free Retrieval-Augmented Generation (RAG) engine for Python.
 
-A minimal RAG engine with zero external runtime dependencies. Stores documents and embeddings in SQLite, supports chunking, metadata filtering, caching, import/export, and a simple embedder interface.
+**small-rag** is a minimal, easy-to-understand vector store + RAG toolkit.  
+It is designed for developers who want a **simple, transparent, hackable RAG library** that can be fully understood in minutes.
 
-## Install
+No FAISS, no Qdrant, no heavy dependencies — just pure Python + SQLite.
+
+---
+
+## Features
+
+- Pure Python implementation (no external dependencies)
+- SQLite-backed vector store
+- Pluggable embedding function (OpenAI, HF models, local LLMs, custom functions)
+- Text preprocessing + chunking
+- Metadata filtering
+- Import/export database to JSON
+- Command-line interface (`smallrag-cli`)
+- Easy to read, extend, and embed inside other projects
+
+---
+
+## Installation
 
 ```bash
 pip install small-rag
 ```
 
-## Quick example
+Verify:
 
-```python
-from Smallrag import SmallRAG
-
-# Provide a simple embedder (random stub or a real model)
-def dummy_embed(text: str) -> list[float]:
-    # Real users should plug SentenceTransformers, OpenAI embeddings, Ollama, etc.
-    import hashlib
-    bs = hashlib.sha256(text.encode()).digest()
-    return [b/255 for b in bs]
-
-rag = SmallRAG("./data/rag.db", verbose=True)
-rag.set_embedder(dummy_embed)
-rag.add_document("Kafka is a distributed streaming platform.")
-rag.add_document("Spark is used for large-scale data processing.")
-print(rag.query("stream processing"))
+```bash
+python -m smallrag --help
 ```
 
-## Features
-- Chunking
-- Metadata filtering
-- Caching of embeddings
-- Import / Export
-- Simple CLI
+---
+
+## Quick Start (Python)
+
+### 1. Create a RAG instance
+
+```python
+from smallrag import SmallRAG
+
+rag = SmallRAG("my.db")
+```
+
+### 2. Set an embedder (required)
+
+```python
+rag.set_embedder(lambda t: [float(ord(c) % 255) for c in t[:64]])
+```
+
+### 3. Add documents
+
+```python
+rag.add_document("Python is a programming language created by Guido van Rossum.")
+rag.add_document("Retrieval augmented generation improves LLM accuracy.")
+```
+
+### 4. Query
+
+```python
+res = rag.query("What is RAG?")
+print(res)
+```
+
+Example output:
+
+```json
+[
+  {
+    "id": 2,
+    "text": "retrieval augmented generation improves llm accuracy.",
+    "metadata": {},
+    "score": 0.87
+  }
+]
+```
+
+---
+
+## Realistic Example (HuggingFace Embeddings)
+
+```python
+from smallrag import SmallRAG
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+rag = SmallRAG("docs.db")
+
+rag.set_embedder(lambda t: model.encode(t).tolist())
+
+rag.add_document("Paris is the capital of France.", metadata={"topic": "geography"})
+rag.add_document("The Eiffel Tower is in Paris.", metadata={"topic": "landmark"})
+
+print(rag.query("Where is the Eiffel Tower?"))
+```
+
+---
+
+## CLI Usage
+
+### Add a document
+
+```bash
+smallrag-cli --db my.db add "Python is easy to learn"
+```
+
+With metadata:
+
+```bash
+smallrag-cli --db my.db add "Paris is beautiful" --meta '{"country": "France"}'
+```
+
+### Query
+
+```bash
+smallrag-cli --db my.db query "What is Python?"
+```
+
+### Export DB
+
+```bash
+smallrag-cli --db my.db export dump.json
+```
+
+### Import DB
+
+```bash
+smallrag-cli --db my.db import dump.json
+```
+
+---
+
+## Filtering by Metadata
+
+```python
+rag.query("Paris", filter={"country": "France"})
+```
+
+---
+
+## Chunking Behavior
+
+Default:
+
+- chunk size: 512
+- overlap: 64
+
+```python
+rag.add_document(big_text, chunk=True, chunk_size=256)
+```
+
+---
+
+## Using OpenAI Embeddings
+
+```python
+from smallrag import SmallRAG
+from openai import OpenAI
+
+client = OpenAI()
+
+rag = SmallRAG("openai.db")
+
+def openai_embed(t: str):
+    emb = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=t
+    )
+    return emb.data[0].embedding
+
+rag.set_embedder(openai_embed)
+rag.add_document("The Amazon rainforest is the largest rainforest on Earth.")
+
+print(rag.query("What is the largest rainforest?"))
+```
+
+---
+
+## Limitations (Intentional)
+
+- Linear search (no ANN index)
+- Not optimized for millions of vectors
+- Retrieval only — no built-in LLM generation
+- Minimalistic by design
+
+---
+
+## Contributing
+
+Pull requests welcome.  
+If you use small-rag, share feedback via issues.
+
+---
+
+## License
+
+MIT License.
